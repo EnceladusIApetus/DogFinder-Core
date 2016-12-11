@@ -1,6 +1,7 @@
 from __future__ import division
 from random import randint
-from modules import data_manager, cluster, nearest_neighbors
+from modules import data_manager, cluster, nearest_neighbors, feature_selector
+
 
 (instances, paths, file_names, original_labels) = data_manager.read_data(
     '/home/icekung/Documents/OverFeat/overfeat/samples/output/dogsColor')
@@ -9,6 +10,9 @@ rootDir = '/home/icekung/Documents/OverFeat/overfeat/samples/orderDogsIn/'
 destDir = '/home/icekung/Documents/OverFeat/overfeat/samples/orderDogs'
 
 ordered_data = data_manager.sort_data(max(original_labels), None, original_labels, instances, file_names)
+instances = feature_selector.reduce_features(ordered_data, instances)
+ordered_data = data_manager.sort_data(max(original_labels), None, original_labels, instances, file_names)
+
 (training_set, testing_set) = data_manager.seperate_data(0.5, ordered_data, label=False)
 
 (cluster_num, labels) = cluster.group(training_set['instances'], training_set['file_names'], rootDir, destDir,

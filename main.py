@@ -10,8 +10,8 @@ rootDir = '/home/icekung/Documents/OverFeat/overfeat/samples/orderDogsIn/'
 destDir = '/home/icekung/Documents/OverFeat/overfeat/samples/orderDogs'
 
 ordered_data = data_manager.sort_data(max(original_labels), None, original_labels, instances, file_names)
-
-reduced_features = feature_selector.reduce_features(ordered_data, instances)
+instances = feature_selector.reduce_features(ordered_data, instances)
+ordered_data = data_manager.sort_data(max(original_labels), None, original_labels, instances, file_names)
 
 (training_set, testing_set) = data_manager.seperate_data(0.5, ordered_data, label=False)
 

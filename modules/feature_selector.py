@@ -35,10 +35,11 @@ def reduce_features(ordered_data, instances):
     cross_match = cross_match[::2]
     labels = [1] * len(intern_match) + [0] * len(cross_match)
     coef = get_coeff(intern_match + cross_match, labels)[0:4096]
-    filters = 13000000000
+    filters = 41000000000
     mask = get_mask(coef, filters)
 
     for index in range(0, len(instances)):
-        instances[index] = [weight for index2, weight in enumerate(instances[index]) if mask[index2] != 0]
+        instances[index] = [(weight/mask[index2]) for index2, weight in enumerate(instances[index]) if mask[index2] != 0]
 
+    print 'size after reducing: ' + str(len(instances[0]))
     return instances

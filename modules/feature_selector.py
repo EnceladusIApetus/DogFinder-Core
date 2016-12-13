@@ -1,4 +1,5 @@
 from sklearn import linear_model
+from sklearn.externals import joblib
 import math
 
 def match_sample(ordered_data):
@@ -20,8 +21,10 @@ def match_sample(ordered_data):
     return (internal_matching, cross_matching)
 
 def get_coeff(data, labels):
-    model = linear_model.LinearRegression()
-    model.fit(data, labels)
+    model = joblib.load('data/feature_selector/linear_regression.mdl')
+    # model = linear_model.LinearRegression()
+    # model.fit(data, labels)
+    # joblib.dump(model, 'data/feature_selector/linear_regression.mdl')
     return model.coef_
 
 def get_mask(coef, filters):

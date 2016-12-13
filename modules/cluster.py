@@ -8,18 +8,22 @@ from collections import Counter
 import shutil
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
+from sklearn.externals import joblib
 
 divider = None
 
 def group(instances, file_names, rootDir, destDir, prefer_cluster=None):
     global divider
     data = scale(instances)
-    cluster = prefer_cluster if prefer_cluster is not None else 9
-    pca = PCA(n_components=cluster).fit(data)
-    #divider = KMeans(init=pca.components_, n_clusters=cluster, n_init=1)
+    # cluster = prefer_cluster if prefer_cluster is not None else 9
+    # pca = PCA(n_components=cluster).fit(data)
+    # divider = KMeans(init=pca.components_, n_clusters=cluster, n_init=1)
     # divider = MiniBatchKMeans(cluster, random_state=0, batch_size=5)
-    divider = AffinityPropagation()
-    labels = divider.fit_predict(data)
+    #divider = AffinityPropagation()
+    divider = joblib.load('data/cluster/affinity_propagation.mdl')
+    labels = divider.predict(data)
+    # labels = divider.fit_predict(data)
+    #joblib.dump(divider, 'data/cluster/affinity_propagation.mdl')
     # labels = divider.fit_predict(instances)
     shutil.rmtree(destDir + '/')
     for index in range(0, len(instances)):

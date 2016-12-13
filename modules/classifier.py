@@ -1,5 +1,6 @@
 from __future__ import division
 from sklearn import svm
+from sklearn.externals import joblib
 
 
 model = None
@@ -13,6 +14,7 @@ def set_data(training_set, testing_set):
 def train():
     global training_set, model
     model = svm.SVC(kernel='poly', degree=5, C=1.0).fit(training_set['instances'], training_set['labels'])
+    joblib.dump(model, 'hello.clf')
 
 def predict(data):
     global model

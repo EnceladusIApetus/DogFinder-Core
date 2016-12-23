@@ -1,48 +1,57 @@
-from sklearn import linear_model
 from sklearn.externals import joblib
 import math
 
-def match_sample(ordered_data):
+model = None
+
+
+def fit(ordered_instances):
+    global model
     internal_matching = []
     cross_matching = []
-
-    groups_size = len(ordered_data)
+    groups_size = len(ordered_instances)
 
     for i in range(1, groups_size):
         for j in range(1, groups_size):
-            for k in range(0, len(ordered_data[i])):
+            for k in range(0, len(ordered_instances[i])):
                 if i == j:
-                    for l in range(0, len(ordered_data[j])):
-                        internal_matching.append(ordered_data[i][k]['instance'] + ordered_data[j][l]['instance'])
+                    for l in range(0, len(ordered_instances[j])):
+                        internal_matching.append(ordered_instances[i][k] + ordered_instances[j][l])
                 else:
-                    for l in range(0, len(ordered_data[j])):
-                        cross_matching.append(ordered_data[i][k]['instance'] + ordered_data[j][l]['instance'])
+                    for l in range(0, len(ordered_instances[j])):
+                        cross_matching.append(ordered_instances[i][k] + ordered_instances[j][l])
 
-    return (internal_matching, cross_matching)
+    cross_matching = cross_matching[::2] # opt only even like 0, 2, 4
+    labels = [1] * len(internal_matching) + [0] * len(cross_matching)
+    model.fit(internal_matching + cross_matching, labels)
 
-def get_coeff(data, labels):
-    model = joblib.load('data/feature_selector/linear_regression.mdl')
-    # model = linear_model.LinearRegression()
-    # model.fit(data, labels)
-    # joblib.dump(model, 'data/feature_selector/linear_regression.mdl')
-    return model.coef_
 
-def get_mask(coef, filters):
+def get_coeff():
+    global model
+    return model.coef_[0:4096]
+
+
+def load(path='data/feature_selector/linear_regression.mdl'):
+    global model
+    model = joblib.load(path)
+
+
+def dump(path='data/feature_selector/linear_regression.mdl'):
+    global model
+    joblib.dump(model, path)
+
+
+def get_mask(filters=41000000000):
+    coef = get_coeff()
     for index, weight in enumerate(coef):
         if math.fabs(weight) < filters:
             coef[index] = 0
     return coef
 
-def reduce_features(ordered_data, instances):
-    (intern_match, cross_match) = match_sample(ordered_data)
-    cross_match = cross_match[::2]
-    labels = [1] * len(intern_match) + [0] * len(cross_match)
-    coef = get_coeff(intern_match + cross_match, labels)[0:4096]
-    filters = 41000000000
-    mask = get_mask(coef, filters)
+
+def reduce_features(instances):
+    mask = get_mask()
 
     for index in range(0, len(instances)):
         instances[index] = [(weight/mask[index2]) for index2, weight in enumerate(instances[index]) if mask[index2] != 0]
 
-    print 'size after reducing: ' + str(len(instances[0]))
     return instances

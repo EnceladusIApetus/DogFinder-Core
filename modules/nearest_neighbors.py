@@ -1,19 +1,19 @@
 from sklearn.neighbors import NearestNeighbors
 
 nn = None
-neighbor = None
+neighbor_num = None
 radius = None
 
-def set(neighbor, radius):
+def set(neighbor_num, radius):
     global nn
-    globals()['neighbor'] = neighbor
+    globals()['neighbor_num'] = neighbor_num
     globals()['radius'] = radius
-    nn = NearestNeighbors(neighbor, radius)
+    nn = NearestNeighbors(neighbor_num, radius)
 
 def fit(data):
-    global nn, neighbor, radius
-    if len(data) < neighbor:
-        nn = nn = NearestNeighbors(len(data), radius)
+    global nn, neighbor_num, radius
+    if len(data) < neighbor_num:
+        nn = NearestNeighbors(len(data), radius) # if number of neighbor is less than defined
     nn.fit(data)
 
 def neighbors(data):

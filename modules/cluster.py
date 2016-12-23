@@ -1,47 +1,40 @@
 from __future__ import division
-import shutil
 from sklearn.cluster import KMeans, AgglomerativeClustering, AffinityPropagation, MiniBatchKMeans
-import numpy as np
-import os
-import nearest_neighbors
 from collections import Counter
-import shutil
-from sklearn.preprocessing import scale
-from sklearn.decomposition import PCA
 from sklearn.externals import joblib
+
+from modules import data_manager
 
 divider = None
 
-def group(instances, file_names, rootDir, destDir, prefer_cluster=None):
-    global divider
-    data = scale(instances)
-    # cluster = prefer_cluster if prefer_cluster is not None else 9
-    # pca = PCA(n_components=cluster).fit(data)
-    # divider = KMeans(init=pca.components_, n_clusters=cluster, n_init=1)
-    # divider = MiniBatchKMeans(cluster, random_state=0, batch_size=5)
-    #divider = AffinityPropagation()
-    divider = joblib.load('data/cluster/affinity_propagation.mdl')
-    labels = divider.predict(data)
-    # labels = divider.fit_predict(data)
-    #joblib.dump(divider, 'data/cluster/affinity_propagation.mdl')
-    # labels = divider.fit_predict(instances)
-    shutil.rmtree(destDir + '/')
-    for index in range(0, len(instances)):
-        if not os.path.exists(destDir + '/' + ''.join(str(labels[index]))):
-            os.makedirs(destDir + '/' + ''.join(str(labels[index])))
-        shutil.copy(rootDir + file_names[index], destDir + '/' + ''.join(str(labels[index])))
-    return (max(labels) + 1, labels)
 
-def predict(instances):
-    labels = []
+def dump(path='data/cluster/affinity_propagation.mdl'):
     global divider
-    nearest_neighbors.set(1, 10)
-    nearest_neighbors.fit(divider.cluster_centers_)
-    for i, label in enumerate(nearest_neighbors.neighbors(instances)):
-        labels.append(label[0])
+    joblib.dump(divider, path)
+
+
+def load(path='data/cluster/affinity_propagation.mdl'):
+    global divider
+    divider = joblib.load(path)
+
+
+def fit(instances):
+    global divider
+    divider = AffinityPropagation()
+    labels = divider.fit_predict(instances)
     return labels
 
-def evaluate(original_labels, training_set, testing_set):
+
+def predict(instances):
+    global divider
+    labels = []
+    for label in divider.predict(instances):
+        labels.append(label)
+    return labels
+
+
+def get_accuracy(ordered_data, ratio=0.5):
+    training_set, testing_set = data_manager.separate_data(ratio, ordered_data)
     training_labels = predict(training_set['instances'])
     testing_labels = predict(testing_set['instances'])
     training_start = 0
@@ -52,7 +45,8 @@ def evaluate(original_labels, training_set, testing_set):
     incorrect = 0
     testing_labels_size = len(testing_set['original_labels'])
     training_labels_size = len(training_set['original_labels'])
-    for index in range(1, max(original_labels) + 1):
+    max_label = max([max(testing_set['original_labels']), max[training_set['original_labels']]])
+    for index in range(1, max(max_label) + 1):
         while training_end < training_labels_size and training_set['original_labels'][training_end] == index :
             training_end += 1
         while testing_end < testing_labels_size and testing_set['original_labels'][testing_end] == index:
@@ -68,7 +62,8 @@ def evaluate(original_labels, training_set, testing_set):
 
     return (correct/(correct + incorrect)) * 100
 
-def purity(sorted_data):
+
+def get_purity(sorted_data):
     items = 0
     accumulated_cluster = 0
     for index in range(0, len(sorted_data)):
